@@ -3,10 +3,21 @@ from selenium import webdriver
 import selenium
 from selenium.webdriver.common.keys import Keys
 from bs4 import BeautifulSoup
+from strings import COOKIE
+
+import random
+import requests
+import json
 
 from pprint import pprint
 
-# TODO: Améliorer en allant chercher les informations dans la page de la formation elle-même
+cookie = {
+    ".AspNetCore.Identity.Application": COOKIE
+}
+
+headers={
+    "content-type": "application/json; charset=utf-8"
+}
 
 CREDITS = "Ma formation médicale"
 
@@ -17,6 +28,15 @@ driver = webdriver.Firefox()
 driver.get(URL)
 
 all_formations = []
+
+prices = [11, 10, 5, 50, 15]
+lieux = ["Paris", "Toulouse", "Marseille", "Rouen", "Grenoble", "Reims"]
+starts = ["15", "16", "17"]
+ends = ["18", "19", "20"]
+
+debuts = ["08", "09", "10"]
+fins = ["15", "16", "17"]
+quarts = ["00", "15", "30", "45"]
 
 for idx in range(1, 30):
     driver.execute_script("window.scrollTo(0, 0);")
@@ -29,16 +49,22 @@ for idx in range(1, 30):
 
     for formation in all_formations_in_one_page:
         try:
+            desc = formation.find('div', class_='item-resume').string
             all_formations.append({
-                "Name": formation.find('h3').string,
-                "Description": formation.find('div', class_='item-resume').string,
-                "Former": CREDITS,
-                "Target": formation.find('div', class_='item-professions').find('div', class_='value').find('ul').find('li').string,
-                "OrganizationName": CREDITS,
-                "Location": "LOCALISATION A CHERCHER DANS LA PAGE DE LA FORMATION",
-                "Price": "PRIX A CHERCHER DANS LA PAGE DE LA FORMATION",
-                "StartDate": "DATE DE DEBUT A CHERCHER DANS LA PAGE DE LA FORMATION",
-                "EndDate": "DATE DE FIN A CHERCHER DANS LA PAGE DE LA FORMATION",
+                "name": formation.find('h3').string,
+                "description": "Aucune description n'a été proposée par le formateur." if desc is None else desc,
+                "former": CREDITS,
+                "target": formation.find('div', class_='item-professions').find('div', class_='value').find('ul').find('li').string,
+                "organizationName": CREDITS,
+                "location": random.choice(lieux),
+                "price": random.choice(prices),
+                "startDate": "2021-10-" + random.choice(starts) + "T" + random.choice(debuts) + ":" + random.choice(quarts) + ":00+02:00",
+                "endDate": "2021-10-" + random.choice(ends) + "T" + random.choice(fins) + ":" + random.choice(quarts) + ":00+02:00",
+                "id": "00000000-0000-0000-0000-000000000000",
+                "articleID":"NO_ID",
+                "quantityCurrent":0,
+                "quantityMax":0,
+                "contact": "0123456789"
             })
         except: pass
 
@@ -48,4 +74,6 @@ for idx in range(1, 30):
 
 driver.close()
 
-pprint(all_formations)
+
+for formation in all_formations:
+    requests.post("https://beta.mediwatch.fr/Formation", verify=False, data=json.dumps(formation), cookies=cookie, headers=headers)
