@@ -69,11 +69,15 @@ for idx in range(1, 30):
         except: pass
 
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    a = driver.find_element_by_xpath(f"//a[@aria-label='Go to page number {idx}']")
-    a.find_element_by_xpath("./..").click()
+    try:
+        a = driver.find_element_by_xpath(f"//a[@aria-label='Go to page number {idx + 1}']")
+        a.find_element_by_xpath("./..").click()
+    except: pass
 
 driver.close()
 
 
 for formation in all_formations:
-    requests.post("https://beta.mediwatch.fr/Formation", verify=False, data=json.dumps(formation), cookies=cookie, headers=headers)
+    r = requests.post("https://beta.mediwatch.fr/Formation", verify=False, data=json.dumps(formation), cookies=cookie, headers=headers)
+    print(r)
+    #exit(1)
